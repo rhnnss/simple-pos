@@ -68,6 +68,12 @@ export interface Config {
   blocks: {};
   collections: {
     users: User;
+    tenants: Tenant;
+    categories: Category;
+    products: Product;
+    customers: Customer;
+    orders: Order;
+    'payment-methods': PaymentMethod;
     media: Media;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -76,6 +82,12 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
+    tenants: TenantsSelect<false> | TenantsSelect<true>;
+    categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    products: ProductsSelect<false> | ProductsSelect<true>;
+    customers: CustomersSelect<false> | CustomersSelect<true>;
+    orders: OrdersSelect<false> | OrdersSelect<true>;
+    'payment-methods': PaymentMethodsSelect<false> | PaymentMethodsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -119,6 +131,21 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  /**
+   * Super Admin memiliki akses penuh ke admin panel, Tenant hanya bisa menggunakan aplikasi POS
+   */
+  role: 'super-admin' | 'tenant';
+  businessName?: string | null;
+  businessType?: ('bouquet' | 'fnb' | 'retail' | 'service') | null;
+  /**
+   * Nomor WhatsApp untuk mengirim receipt ke customer
+   */
+  whatsappNumber?: string | null;
+  address?: string | null;
+  /**
+   * Nonaktifkan untuk menangguhkan akses tenant
+   */
+  isActive?: boolean | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -136,6 +163,178 @@ export interface User {
       }[]
     | null;
   password?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tenants".
+ */
+export interface Tenant {
+  id: number;
+  /**
+   * Link ke user account tenant
+   */
+  user: number | User;
+  businessName: string;
+  businessType: 'bouquet' | 'fnb' | 'retail' | 'service';
+  subscriptionPlan?: ('basic' | 'premium' | 'enterprise') | null;
+  monthlyTransactionLimit?: number | null;
+  currentMonthTransactions?: number | null;
+  isActive?: boolean | null;
+  registrationDate?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: number;
+  tenant?: (number | null) | User;
+  name: string;
+  /**
+   * URL-friendly version of the name
+   */
+  slug: string;
+  description?: string | null;
+  /**
+   * Warna untuk chip kategori, contoh: #FF5733
+   */
+  color?: string | null;
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products".
+ */
+export interface Product {
+  id: number;
+  tenant?: (number | null) | User;
+  name: string;
+  /**
+   * URL-friendly version of the name
+   */
+  slug: string;
+  description?: string | null;
+  price: number;
+  category: number | Category;
+  /**
+   * Stock Keeping Unit - kode unik produk
+   */
+  sku?: string | null;
+  stock?: number | null;
+  /**
+   * Aktifkan untuk melacak stok produk
+   */
+  trackStock?: boolean | null;
+  isActive?: boolean | null;
+  tags?:
+    | {
+        tag: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers".
+ */
+export interface Customer {
+  id: number;
+  tenant?: (number | null) | User;
+  /**
+   * Nomor WhatsApp customer (dengan kode negara, contoh: +6281234567890)
+   */
+  whatsappNumber: string;
+  name?: string | null;
+  email?: string | null;
+  address?: string | null;
+  /**
+   * Catatan khusus tentang customer
+   */
+  notes?: string | null;
+  totalOrders?: number | null;
+  totalSpent?: number | null;
+  lastOrderDate?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders".
+ */
+export interface Order {
+  id: number;
+  tenant?: (number | null) | User;
+  /**
+   * Nomor unik pesanan, contoh: #903433
+   */
+  orderNumber: string;
+  customer: number | Customer;
+  items: {
+    product: number | Product;
+    quantity: number;
+    /**
+     * Harga pada saat pemesanan
+     */
+    price: number;
+    subtotal: number;
+    /**
+     * Catatan khusus untuk item ini
+     */
+    notes?: string | null;
+    id?: string | null;
+  }[];
+  subtotal: number;
+  tax?: number | null;
+  discount?: number | null;
+  total: number;
+  status: 'pending' | 'sent' | 'pending-payment' | 'paid' | 'completed' | 'cancelled';
+  paymentMethod?: ('bank-transfer' | 'qris' | 'cash' | 'e-wallet') | null;
+  receiptSent?: boolean | null;
+  receiptSentAt?: string | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payment-methods".
+ */
+export interface PaymentMethod {
+  id: number;
+  tenant?: (number | null) | User;
+  name: string;
+  type: 'bank-transfer' | 'qris' | 'e-wallet' | 'cash';
+  accountNumber?: string | null;
+  accountName?: string | null;
+  bankName?: string | null;
+  qrCode?: (number | null) | Media;
+  /**
+   * Instruksi detail untuk customer
+   */
+  instructions?: {
+    root: {
+      type: string;
+      children: {
+        type: string;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -209,6 +408,30 @@ export interface PayloadLockedDocument {
         value: number | User;
       } | null)
     | ({
+        relationTo: 'tenants';
+        value: number | Tenant;
+      } | null)
+    | ({
+        relationTo: 'categories';
+        value: number | Category;
+      } | null)
+    | ({
+        relationTo: 'products';
+        value: number | Product;
+      } | null)
+    | ({
+        relationTo: 'customers';
+        value: number | Customer;
+      } | null)
+    | ({
+        relationTo: 'orders';
+        value: number | Order;
+      } | null)
+    | ({
+        relationTo: 'payment-methods';
+        value: number | PaymentMethod;
+      } | null)
+    | ({
         relationTo: 'media';
         value: number | Media;
       } | null);
@@ -259,6 +482,12 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  role?: T;
+  businessName?: T;
+  businessType?: T;
+  whatsappNumber?: T;
+  address?: T;
+  isActive?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -275,6 +504,124 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tenants_select".
+ */
+export interface TenantsSelect<T extends boolean = true> {
+  user?: T;
+  businessName?: T;
+  businessType?: T;
+  subscriptionPlan?: T;
+  monthlyTransactionLimit?: T;
+  currentMonthTransactions?: T;
+  isActive?: T;
+  registrationDate?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories_select".
+ */
+export interface CategoriesSelect<T extends boolean = true> {
+  tenant?: T;
+  name?: T;
+  slug?: T;
+  description?: T;
+  color?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products_select".
+ */
+export interface ProductsSelect<T extends boolean = true> {
+  tenant?: T;
+  name?: T;
+  slug?: T;
+  description?: T;
+  price?: T;
+  category?: T;
+  sku?: T;
+  stock?: T;
+  trackStock?: T;
+  isActive?: T;
+  tags?:
+    | T
+    | {
+        tag?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers_select".
+ */
+export interface CustomersSelect<T extends boolean = true> {
+  tenant?: T;
+  whatsappNumber?: T;
+  name?: T;
+  email?: T;
+  address?: T;
+  notes?: T;
+  totalOrders?: T;
+  totalSpent?: T;
+  lastOrderDate?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders_select".
+ */
+export interface OrdersSelect<T extends boolean = true> {
+  tenant?: T;
+  orderNumber?: T;
+  customer?: T;
+  items?:
+    | T
+    | {
+        product?: T;
+        quantity?: T;
+        price?: T;
+        subtotal?: T;
+        notes?: T;
+        id?: T;
+      };
+  subtotal?: T;
+  tax?: T;
+  discount?: T;
+  total?: T;
+  status?: T;
+  paymentMethod?: T;
+  receiptSent?: T;
+  receiptSentAt?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payment-methods_select".
+ */
+export interface PaymentMethodsSelect<T extends boolean = true> {
+  tenant?: T;
+  name?: T;
+  type?: T;
+  accountNumber?: T;
+  accountName?: T;
+  bankName?: T;
+  qrCode?: T;
+  instructions?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
