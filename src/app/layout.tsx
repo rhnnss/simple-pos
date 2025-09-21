@@ -1,25 +1,20 @@
 import React from "react";
 import { Metadata } from "next";
-import { Providers } from "./providers";
-
-import "./styles.css";
 
 export const metadata: Metadata = {
   title: {
     default: "Simple PoS",
     template: "%s | Simple PoS",
   },
-  description:
-    "Point of Sale yang mudah digunakan untuk bisnis Anda dengan teknologi modern.",
+  description: "Point of Sale yang mudah digunakan untuk bisnis Anda",
   keywords: [
     "Point of Sale",
     "PoS",
-    "Kasir Digital",
-    "Manajemen Bisnis",
+    "Kasir",
+    "Bisnis",
     "Penjualan",
     "Invoice",
     "Receipt",
-    "Inventory",
   ],
   authors: [{ name: "Simple PoS Team" }],
   creator: "Simple PoS",
@@ -33,45 +28,36 @@ export const metadata: Metadata = {
     locale: "id_ID",
     url: "https://simple-pos.com",
     siteName: "Simple PoS",
-    title: "Simple PoS - Point of Sale Modern",
-    description:
-      "Point of Sale yang mudah digunakan untuk bisnis Anda dengan teknologi modern.",
+    title: "Simple PoS - Point of Sale untuk Bisnis Anda",
+    description: "Point of Sale yang mudah digunakan untuk bisnis Anda",
     images: [
       {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Simple PoS - Point of Sale Modern",
+        alt: "Simple PoS",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Simple PoS - Point of Sale Modern",
-    description:
-      "Point of Sale yang mudah digunakan untuk bisnis Anda dengan teknologi modern.",
+    title: "Simple PoS",
+    description: "Point of Sale yang mudah digunakan untuk bisnis Anda",
     images: ["/og-image.jpg"],
-    creator: "@simplepos",
   },
   viewport: "width=device-width, initial-scale=1",
   themeColor: "#000000",
   manifest: "/site.webmanifest",
 };
 
-export default function FrontendLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <Providers
-      themeProps={{
-        attribute: "class",
-        defaultTheme: "dark",
-        themes: ["light", "dark"],
-      }}
-    >
-      <main className="min-h-screen">{children}</main>
-    </Providers>
+    <html lang="id" suppressHydrationWarning>
+      <body suppressHydrationWarning>{children}</body>
+    </html>
   );
 }
